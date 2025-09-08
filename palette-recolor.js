@@ -3,9 +3,9 @@
   const SLOT_HUES = { blue: 240, green: 120, yellow: 60, red: 0 };
   // New anchor rules: neutral gray only at three levels (tolerance in luma space)
   const ANCHORS = {
-    TRIM: { y: 48, tol: 12 },   // ~#303030 low-dark gray (flat trim)
-    SKIN: { y: 153, tol: 14 },  // ~#999999 mid gray
-    HAIR: { y: 96, tol: 12 }    // ~#606060 dark gray
+    TRIM: { y: 40, tol: 8 },   // low gray ~ #282828–#383838
+    SKIN: { y: 158, tol: 10 }, // mid gray ~ #9E9E9E–#A8A8A8
+    HAIR: { y: 96, tol: 8 }    // dark gray ~ #585858–#686868
   };
   // New band rules (Gauntlet Legends grayscale spec)
   const RANGES = {
@@ -110,9 +110,9 @@
           }
           for(let i=0;i<p.length;i+=4){
             const a=p[i+3]; if(a<5) continue;
-            const r=p[i], g=p[i+1], b=p[i+2]; const y=getLuma(r,g,b);
-            const hsl=rgbToHsl(r,g,b);
-            if (!isNeutralGray(r,g,b)) continue; // ignore colored materials entirely
+            const r=p[i], g=p[i+1], b=p[i+2];
+            if (!isNeutralGray(r,g,b)) continue; // only neutral grays are recolored
+            const y=getLuma(r,g,b);
             const dyTrim=Math.abs(y-ANCHORS.TRIM.y), dySkin=Math.abs(y-ANCHORS.SKIN.y), dyHair=Math.abs(y-ANCHORS.HAIR.y);
             if (dyTrim<=ANCHORS.TRIM.tol){ const t=1-(dyTrim/ANCHORS.TRIM.tol); const col=slotShadeColor(hue,t); p[i]=col.r;p[i+1]=col.g;p[i+2]=col.b; continue; }
             if (dySkin<=ANCHORS.SKIN.tol){ const col=skinColor(paletteFor(character), y); p[i]=col.r;p[i+1]=col.g;p[i+2]=col.b; continue; }
