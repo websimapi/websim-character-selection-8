@@ -2,8 +2,11 @@ Gauntlet Legends Character Art Spec (Recolor-Safe)
 
 Global rules:
 - Transparent background with clean alpha. No fringes/halos, no drop shadow. Full body in frame, boots and full weapon visible.
-- Natural, original colors everywhere except where specified for TRIM and RECOLOR BANDS.
-- Metals, leather, cloth, wood, gemstones: paint in full color and shading. Do NOT use near-neutral grayscale for these materials.
+- Paint EVERYTHING in full natural color EXCEPT three neutral-gray anchor regions for recolor:
+  • Trim accents only: low-dark neutral gray near #303030 (flat fill; ±8 tolerance; no gradients/dithering)
+  • Skin highlights/planes: middle neutral gray near #999999 (±10 tolerance; allow subtle shading within this band only)
+  • Hair mass: dark neutral gray near #606060 (±10 tolerance; allow subtle shading within this band only)
+- Do NOT use grayscale/black/white anywhere else. Metals, leather, cloth, wood, gemstones: fully colored with normal shading.
 - Trim bands for player recolor are STRICT, FLAT mid-grays with crisp edges. Use ONLY these exact hex values:
   • #202020 (32)
   • #404040 (64)
@@ -43,8 +46,6 @@ Valkyrie:
 - Trim grays on shield rim inlay, armor edge piping, boot edging, emblem outlines.
 
 Technical encoding checklist:
-- Trim: only the 4 exact mid-gray hex values above; flat fill.
-- Hair: near-black neutral cluster (#0A–#23), low saturation.
-- Skin: only use near-white neutral for top highlights; avoid neutral midtones so main skin color remains painterly.
+- Only three recolor anchors in neutral gray: Trim ≈ #303030 (flat), Skin ≈ #999999, Hair ≈ #606060.
+- Keep those pixels neutral (saturation ~0); everything else must be colored (non-neutral) to avoid shader capture.
 - No halos on transparency; clean anti-aliased contour.
-

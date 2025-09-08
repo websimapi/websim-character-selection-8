@@ -108,7 +108,7 @@ function initializeCharacterSelection() {
             input.addEventListener('input', () => {
                 playerSlots[index].hairColor = input.value;
                 const img = slot.querySelector('.character-image');
-                if (img) applyHairTintToImage(img, input.value);
+                if (img) applyColorShaderToImage(img, slot.dataset.color);
             });
             slot.querySelector('.character-frame').appendChild(btn);
             slot.querySelector('.character-frame').appendChild(input);

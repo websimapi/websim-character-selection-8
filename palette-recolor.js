@@ -1,6 +1,12 @@
 // Palette-based recolor: 6 grayscale trim bands + 6 near-black (hair) + 6 near-white (skin)
 (function(){
   const SLOT_HUES = { blue: 240, green: 120, yellow: 60, red: 0 };
+  // New anchor rules: neutral gray only at three levels (tolerance in luma space)
+  const ANCHORS = {
+    TRIM: { y: 48, tol: 12 },   // ~#303030 low-dark gray (flat trim)
+    SKIN: { y: 153, tol: 14 },  // ~#999999 mid gray
+    HAIR: { y: 96, tol: 12 }    // ~#606060 dark gray
+  };
   // New band rules (Gauntlet Legends grayscale spec)
   const RANGES = {
     HAIR:  { min: 80,  max: 120 },
@@ -64,7 +70,29 @@
     return DEFAULT_PALETTES[name] || DEFAULT_PALETTES.Unknown;
   }
 
+  function isNeutralGray(r,g,b){ 
+    const {s}=rgbToHsl(r,g,b); 
+    return s <= 0.08;
+  }
+
   function getLuma(r,g,b){ return Math.round(0.2126*r + 0.7152*g + 0.0722*b); }
+
+  function hairColorRgb(img, slotHue){
+    // Prefer per-slot hair hex set by UI; fallback to slot hue
+    let hex = null;
+    try{
+      const slot = img.closest('.character-slot');
+      if (slot){
+        const idx = parseInt(slot.dataset.player,10)-1;
+        hex = (window.playerSlots && window.playerSlots[idx] && window.playerSlots[idx].hairColor) || null;
+      }
+    }catch(e){}
+    if (hex){
+      const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      if (m) return { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) };
+    }
+    return hslToRgb(slotHue, 0.8, 0.25);
+  }
 
   async function paletteRecolor(img, character, slotColorName, returnBlob=true){
     return new Promise(resolve=>{
@@ -84,13 +112,12 @@
             const a=p[i+3]; if(a<5) continue;
             const r=p[i], g=p[i+1], b=p[i+2]; const y=getLuma(r,g,b);
             const hsl=rgbToHsl(r,g,b);
-            // Only neutral pixels considered; skip colored materials entirely
-            if (hsl.s <= 0.10) {
-              if (inRange(y, RANGES.HAIR)) { continue; } // hair handled separately
-              if (inRange(y, RANGES.SKIN)) { const col=skinColor(paletteFor(character), y); p[i]=col.r; p[i+1]=col.g; p[i+2]=col.b; continue; }
-              if (inRange(y, RANGES.TRIM)) { const t=(y-RANGES.TRIM.min)/(RANGES.TRIM.max-RANGES.TRIM.min); const tgt=slotShadeColor(hue, t); p[i]=tgt.r; p[i+1]=tgt.g; p[i+2]=tgt.b; continue; }
-              // ARMOR (30–70): leave as-is grayscale to preserve texture for future effects
-            }
+            if (!isNeutralGray(r,g,b)) continue; // ignore colored materials entirely
+            const dyTrim=Math.abs(y-ANCHORS.TRIM.y), dySkin=Math.abs(y-ANCHORS.SKIN.y), dyHair=Math.abs(y-ANCHORS.HAIR.y);
+            if (dyTrim<=ANCHORS.TRIM.tol){ const t=1-(dyTrim/ANCHORS.TRIM.tol); const col=slotShadeColor(hue,t); p[i]=col.r;p[i+1]=col.g;p[i+2]=col.b; continue; }
+            if (dySkin<=ANCHORS.SKIN.tol){ const col=skinColor(paletteFor(character), y); p[i]=col.r;p[i+1]=col.g;p[i+2]=col.b; continue; }
+            if (dyHair<=ANCHORS.HAIR.tol){ const tgt=hairColorRgb(img,hue); const tt=(y- (ANCHORS.HAIR.y-ANCHORS.HAIR.tol))/(ANCHORS.HAIR.tol*2); const l=0.18+0.30*tt; const hh=rgbToHsl(tgt.r,tgt.g,tgt.b).h; const col=hslToRgb(hh,0.88,clamp01(l)); p[i]=col.r;p[i+1]=col.g;p[i+2]=col.b; continue; }
+            // Any other neutral gray stays untouched to preserve artist intent
           }
           x.putImageData(d,0,0);
           c.toBlob(blob=>{
