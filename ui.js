@@ -113,27 +113,6 @@ function initializeCharacterSelection() {
             slot.querySelector('.character-frame').appendChild(btn);
             slot.querySelector('.character-frame').appendChild(input);
         }
-
-        // Long-press to toggle grayscale QA overlay
-        let pressTimer=null;
-        const frame = slot.querySelector('.character-frame');
-        const wrap = slot.querySelector('.character-image-wrapper');
-        const startPress = () => { pressTimer = setTimeout(async () => {
-            const img = wrap.querySelector('.character-image');
-            const existing = wrap.querySelector('canvas.qa-overlay');
-            if (existing) { existing.remove(); return; }
-            const { canvas } = await generateGrayscaleQAMask(img);
-            canvas.className = 'qa-overlay';
-            canvas.style.position = 'absolute'; canvas.style.inset = '0'; canvas.style.pointerEvents = 'none';
-            wrap.appendChild(canvas);
-        }, 600); };
-        const cancelPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer=null; } };
-        frame.addEventListener('touchstart', startPress, {passive:true});
-        frame.addEventListener('touchend', cancelPress);
-        frame.addEventListener('touchmove', cancelPress);
-        frame.addEventListener('mousedown', startPress);
-        frame.addEventListener('mouseleave', cancelPress);
-        frame.addEventListener('mouseup', cancelPress);
     });
     setupMobileSlotPicker();
 }

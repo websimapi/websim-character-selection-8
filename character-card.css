@@ -84,8 +84,6 @@
     min-height: 0;
 }
 
-.character-image-wrapper canvas.qa-overlay { mix-blend-mode: screen; opacity: 0.85; }
-
 .character-stats {
     position: absolute;
     bottom: 0;
