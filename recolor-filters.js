@@ -255,9 +255,10 @@ async function applyHairTintToImage(img, hex){
                     const r=p[i], g=p[i+1], b=p[i+2];
                     const {h,s,l}=rgbToHsl(r,g,b);
                     const y=0.2126*r+0.7152*g+0.0722*b;
-                    if (y<=40 && s<=0.20) { // 6 closest to black -> hair band
+                    if (y>=80 && y<=120 && s<=0.20) { // hair band per new spec
                         const tH = rgbToHsl(tgt.r,tgt.g,tgt.b).h;
-                        const tL = Math.min(0.42, Math.max(0.06, (y/40)*0.36)); // preserve hair shading across 6 bands
+                        const t = (y-80)/40;
+                        const tL = Math.min(0.55, Math.max(0.12, 0.18 + t*0.30)); // preserve shading 80–120
                         const col=hslToRgb(tH, 0.88, tL);
                         p[i]=col.r; p[i+1]=col.g; p[i+2]=col.b;
                     }

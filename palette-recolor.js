@@ -1,9 +1,13 @@
 // Palette-based recolor: 6 grayscale trim bands + 6 near-black (hair) + 6 near-white (skin)
 (function(){
   const SLOT_HUES = { blue: 240, green: 120, yellow: 60, red: 0 };
-  const TRIM_VALUES = [32, 64, 96, 128]; // EXACT trim grays: #202020, #404040, #606060, #808080
-  const HAIR_MAX = 36;   // near-black hair band, handled in hair pass
-  const SKIN_MIN = 240;  // only very bright neutrals count as skin for recolor
+  // New band rules (Gauntlet Legends grayscale spec)
+  const RANGES = {
+    HAIR:  { min: 80,  max: 120 },
+    SKIN:  { min: 130, max: 170 },
+    ARMOR: { min: 30,  max: 70  },
+    TRIM:  { min: 190, max: 230 }
+  };
   const DEFAULT_PALETTES = {
     Warrior: { skinH: 28, skinS: 0.45, skinL: 0.72, unique1: '#9aa3ad', unique2: '#6b3f1f' },
     Archer:  { skinH: 30, skinS: 0.55, skinL: 0.60, unique1: '#8b5a2b', unique2: '#2e8b57' },
@@ -18,22 +22,18 @@
     const m=l-c/2; return {r:Math.round((r1+m)*255), g:Math.round((g1+m)*255), b:Math.round((b1+m)*255)}; }
   function clamp01(v){ return Math.max(0, Math.min(1, v)); }
 
-  // Exact trim gray detection, returns band 0..3 or -1 if not a trim pixel
-  function trimBandForExactGray(r,g,b){
-    if (r!==g || g!==b) return -1;
-    const v = r|0; // 0..255
-    const idx = TRIM_VALUES.indexOf(v);
-    return idx; // -1 if not matched
-  }
+  function inRange(v, rng){ return v >= rng.min && v <= rng.max; }
 
-  function slotShadeColor(hue, band){ // band: 0..3
-    const sArr=[0.70,0.74,0.78,0.80], lArr=[0.30,0.45,0.62,0.78];
-    return hslToRgb(hue, sArr[band], lArr[band]);
+  function slotShadeColor(hue, t){ // t = normalized 0..1 within TRIM band for shading
+    const s = 0.75;
+    const l = 0.35 + t * 0.45; // preserve band-internal gradient
+    return hslToRgb(hue, s, clamp01(l));
   }
 
   function skinColor(palette, y){ // y in 0..255
     const {skinH: h, skinS: s, skinL: baseL}=palette;
-    const shade = (y - SKIN_MIN) / (255 - SKIN_MIN) * 0.15 - 0.05; // keep subtle shading
+    const t = (y - RANGES.SKIN.min) / (RANGES.SKIN.max - RANGES.SKIN.min);
+    const shade = (t - 0.5) * 0.20; // subtle +/- lightness around base
     return hslToRgb(h, s, clamp01(baseL + shade));
   }
 
@@ -80,15 +80,15 @@
             const a=p[i+3]; if(a<5) continue;
             const r=p[i], g=p[i+1], b=p[i+2]; const y=getLuma(r,g,b);
             const hsl=rgbToHsl(r,g,b);
-            // Only neutral pixels are candidates
+            // Only neutral pixels considered
             if (hsl.s <= 0.10) {
-              // Hair: leave untouched here (hair pass handles it)
-              if (y <= HAIR_MAX) { continue; }
-              // Skin: only very bright neutral pixels
-              if (y >= SKIN_MIN) { const col=skinColor(paletteFor(character), y); p[i]=col.r; p[i+1]=col.g; p[i+2]=col.b; continue; }
-              // Trim: only exact whitelist values
-              const band = trimBandForExactGray(r,g,b);
-              if (band >= 0) { const tgt=slotShadeColor(hue, band); p[i]=tgt.r; p[i+1]=tgt.g; p[i+2]=tgt.b; continue; }
+              // Hair: handled in hair pass (new 80–120 range)
+              if (inRange(y, RANGES.HAIR)) { continue; }
+              // Skin
+              if (inRange(y, RANGES.SKIN)) { const col=skinColor(paletteFor(character), y); p[i]=col.r; p[i+1]=col.g; p[i+2]=col.b; continue; }
+              // Trim -> map to slot color, preserve shading within band
+              if (inRange(y, RANGES.TRIM)) { const t=(y-RANGES.TRIM.min)/(RANGES.TRIM.max-RANGES.TRIM.min); const tgt=slotShadeColor(hue, t); p[i]=tgt.r; p[i+1]=tgt.g; p[i+2]=tgt.b; continue; }
+              // Armor base: keep grayscale (30–70) so future shaders can target it; do nothing
             }
           }
           x.putImageData(d,0,0);
