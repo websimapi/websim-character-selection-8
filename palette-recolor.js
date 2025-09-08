@@ -1,9 +1,9 @@
 // Palette-based recolor: 6 grayscale trim bands + 6 near-black (hair) + 6 near-white (skin)
 (function(){
   const SLOT_HUES = { blue: 240, green: 120, yellow: 60, red: 0 };
-  const TRIM_VALUES = [32, 64, 96, 128]; // EXACT trim grays: #202020, #404040, #606060, #808080
-  const HAIR_MAX = 36;   // near-black hair band, handled in hair pass
-  const SKIN_MIN = 240;  // only very bright neutrals count as skin for recolor
+  const TRIM_VALUES = [32, 64, 96, 128]; // exact trim grays
+  const HAIR_LUMA = { min: 24, max: 72 };   // middle-dark band, avoid extremes
+  const SKIN_LUMA = { min: 216, max: 244 }; // middle-high band, avoid extremes
   const DEFAULT_PALETTES = {
     Warrior: { skinH: 28, skinS: 0.45, skinL: 0.72, unique1: '#9aa3ad', unique2: '#6b3f1f' },
     Archer:  { skinH: 30, skinS: 0.55, skinL: 0.60, unique1: '#8b5a2b', unique2: '#2e8b57' },
@@ -33,7 +33,7 @@
 
   function skinColor(palette, y){ // y in 0..255
     const {skinH: h, skinS: s, skinL: baseL}=palette;
-    const shade = (y - SKIN_MIN) / (255 - SKIN_MIN) * 0.15 - 0.05; // keep subtle shading
+    const shade = (y - SKIN_LUMA.min) / (SKIN_LUMA.max - SKIN_LUMA.min) * 0.15 - 0.05; // keep subtle shading
     return hslToRgb(h, s, clamp01(baseL + shade));
   }
 
@@ -79,13 +79,12 @@
           for(let i=0;i<p.length;i+=4){
             const a=p[i+3]; if(a<5) continue;
             const r=p[i], g=p[i+1], b=p[i+2]; const y=getLuma(r,g,b);
-            const hsl=rgbToHsl(r,g,b);
             // Only neutral pixels are candidates
             if (hsl.s <= 0.10) {
               // Hair: leave untouched here (hair pass handles it)
-              if (y <= HAIR_MAX) { continue; }
+              if (y <= HAIR_LUMA.max) { continue; }
               // Skin: only very bright neutral pixels
-              if (y >= SKIN_MIN) { const col=skinColor(paletteFor(character), y); p[i]=col.r; p[i+1]=col.g; p[i+2]=col.b; continue; }
+              if (y >= SKIN_LUMA.min && y <= SKIN_LUMA.max) { const col=skinColor(paletteFor(character), y); p[i]=col.r; p[i+1]=col.g; p[i+2]=col.b; continue; }
               // Trim: only exact whitelist values
               const band = trimBandForExactGray(r,g,b);
               if (band >= 0) { const tgt=slotShadeColor(hue, band); p[i]=tgt.r; p[i+1]=tgt.g; p[i+2]=tgt.b; continue; }

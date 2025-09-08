@@ -255,9 +255,9 @@ async function applyHairTintToImage(img, hex){
                     const r=p[i], g=p[i+1], b=p[i+2];
                     const {h,s,l}=rgbToHsl(r,g,b);
                     const y=0.2126*r+0.7152*g+0.0722*b;
-                    if (y<=40 && s<=0.20) { // 6 closest to black -> hair band
+                    if (y>=24 && y<=72 && s<=0.20) { // Hair band: middle-dark range
                         const tH = rgbToHsl(tgt.r,tgt.g,tgt.b).h;
-                        const tL = Math.min(0.42, Math.max(0.06, (y/40)*0.36)); // preserve hair shading across 6 bands
+                        const tL = Math.min(0.50, Math.max(0.10, ((y-24)/(72-24))*0.40)); // preserve shading across band
                         const col=hslToRgb(tH, 0.88, tL);
                         p[i]=col.r; p[i+1]=col.g; p[i+2]=col.b;
                     }
@@ -276,3 +276,32 @@ async function applyHairTintToImage(img, hex){
     });
 }
 window.applyHairTintToImage = applyHairTintToImage;
+
+async function applySkinTintToImage(img, hex){
+    return new Promise(resolve=>{
+        const run=()=>{
+            try{
+                const c=document.createElement('canvas'), x=c.getContext('2d',{willReadFrequently:true});
+                c.width=img.naturalWidth; c.height=img.naturalHeight; x.drawImage(img,0,0);
+                const d=x.getImageData(0,0,c.width,c.height), p=d.data;
+                const tgt={r:parseInt(hex.slice(1,3),16),g:parseInt(hex.slice(3,5),16),b:parseInt(hex.slice(5,7),16)};
+                const tH = rgbToHsl(tgt.r,tgt.g,tgt.b).h;
+                for(let i=0;i<p.length;i+=4){
+                    const a=p[i+3]; if(a<5) continue;
+                    const r=p[i], g=p[i+1], b=p[i+2];
+                    const y=0.2126*r+0.7152*g+0.0722*b;
+                    if (y>=216 && y<=244) { // skin highlight band
+                        const tL = Math.min(0.90, Math.max(0.55, 0.55 + ((y-216)/(244-216))*0.25));
+                        const col=hslToRgb(tH, 0.45, tL);
+                        p[i]=col.r; p[i+1]=col.g; p[i+2]=col.b;
+                    }
+                }
+                x.putImageData(d,0,0);
+                c.toBlob(b=>{ if(b){ if(img.dataset.blobUrlSkin) URL.revokeObjectURL(img.dataset.blobUrlSkin);
+                    const url=URL.createObjectURL(b); img.dataset.blobUrlSkin=url; img.src=url; } resolve(); });
+            }catch(e){ console.warn('[SkinTint] Failed', e); resolve(); }
+        };
+        if (img.complete && img.naturalWidth) run(); else img.addEventListener('load', run, {once:true});
+    });
+}
+window.applySkinTintToImage = applySkinTintToImage;
