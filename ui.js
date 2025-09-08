@@ -113,27 +113,6 @@ function initializeCharacterSelection() {
             slot.querySelector('.character-frame').appendChild(btn);
             slot.querySelector('.character-frame').appendChild(input);
         }
-        
-        // Skin color picker UI
-        if (!slot.querySelector('.skin-color-btn')) {
-            const btnS = document.createElement('button');
-            btnS.className = 'hair-color-btn skin-color-btn';
-            btnS.style.right = '48px';
-            btnS.title = 'Skin Color';
-            btnS.textContent = '🧴';
-            const inputS = document.createElement('input');
-            inputS.type = 'color'; inputS.style.display = 'none';
-            if (!playerSlots[index].skinColor) playerSlots[index].skinColor = '#f2d0b5';
-            inputS.value = playerSlots[index].skinColor;
-            btnS.addEventListener('click', () => inputS.click());
-            inputS.addEventListener('input', () => {
-                playerSlots[index].skinColor = inputS.value;
-                const img = slot.querySelector('.character-image');
-                if (img) applySkinTintToImage(img, inputS.value);
-            });
-            slot.querySelector('.character-frame').appendChild(btnS);
-            slot.querySelector('.character-frame').appendChild(inputS);
-        }
     });
     setupMobileSlotPicker();
 }

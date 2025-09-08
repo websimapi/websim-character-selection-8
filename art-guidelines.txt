@@ -1,29 +1,50 @@
 Gauntlet Legends Character Art Spec (Recolor-Safe)
 
-Global rules (Grayscale-Only Pipeline, Recolor-Safe):
-- Entire character rendered in grayscale ONLY with transparent background; clean alpha (no halos/matte), no drop shadows. Full body in frame (boots and full weapon visible).
-- Four band families must be used, each strictly separated for shader mapping, avoiding absolute extremes (do not use pure #000/#FFF):
-  1) Hair band (near-black, middle of the dark range): luma 24–72 only, flat-to-soft clustered fills, low saturation (neutral). Preserve form via value steps; no colored highlights.
-  2) Skin band (near-white, middle-high range): luma 216–244 only for highlight planes (midtones/shadows must be darker than 216 and NOT in trim greys). Keep highlight flats crisply bounded; no color.
-  3) Armour/Weapons band (mid greys): luma 96–200 for all base materials (metal, leather, cloth, wood) EXCLUDING trim and reserved hair/skin bands. Use painterly shading within this luma window.
-  4) Trim bands (exact discrete greys for recolor): use ONLY these exact flat values—#202020 (32), #404040 (64), #606060 (96), #808080 (128). No gradients/dithering; crisp edges. Apply to: armor edge inlays, emblem outlines, belt piping, boot edges, bracer seams, bow limb edge accents, quiver/sash piping, shield rim inlays, staff grip rings.
-- Prohibitions: Do NOT use any color; do NOT use pure #000000/#FFFFFF; do NOT reuse trim greys for any non-trim area; do NOT leak hair/skin bands into armor/weapons.
-- Hair: only uses luma 24–72 (neutral), clustered values, clean silhouette suitable for tinting.
-- Skin: only uses luma 216–244 on brightest planes; midtones should fall into the 140–210 range to keep painterly shading and avoid remapping.
-- Anti-aliasing allowed against transparency but keep interior pixels strictly within respective bands.
+Global rules:
+- Transparent background with clean alpha. No fringes/halos, no drop shadow. Full body in frame, boots and full weapon visible.
+- Natural, original colors everywhere except where specified for TRIM and RECOLOR BANDS.
+- Metals, leather, cloth, wood, gemstones: paint in full color and shading. Do NOT use near-neutral grayscale for these materials.
+- Trim bands for player recolor are STRICT, FLAT mid-grays with crisp edges. Use ONLY these exact hex values:
+  • #202020 (32)
+  • #404040 (64)
+  • #606060 (96)
+  • #808080 (128)
+  These are used on armour edging, sash piping, emblem outlines, bow limb edge accents, bracer seams, boot edging, belt piping.
+  No gradients/dithering in trim. Anti-aliasing is OK at edges but keep interior pixels flat.
+- Reserved grayscale NOT for recolor (allowed sparingly): #1C1C1C (28), #AAAAAA (170). Use for fixed accents only.
+- Hair base should be near-black neutral for tinting: cluster values between #0A0A0A and #232323, low saturation.
+  Do NOT use colored highlights in hair; keep shading neutral so engine can tint cleanly.
+- Skin base should be near-white neutral for tinting of highlights: cluster values from #F0F0F0 to #FFFFFF for the brightest planes.
+  Midtones and shadows of skin may be painted normally in color; only the brightest neutral pixels will be re-shaded by engine.
+- Avoid using exact trim grays for anything other than trim accents.
+- Avoid pure #000000/#FFFFFF on outlines; use slightly off-black/off-white to avoid unintended mapping.
 
-Per character prompts (Greyscale-only):
-Warrior:
-- HD full-body armored warrior, confident stance; heavy pauldrons, chestplate, leather straps, cloth tabard; all in ARMOUR/WEAPONS band (96–200). Trim: apply ONLY #202020/#404040/#606060/#808080 to armor edge inlays, emblem outlines, belt/boot piping. Hair strictly 24–72 band. Skin highlights strictly 216–244 band. Transparent background, crisp silhouette.
+Per character prompts:
+Warrior (tank):
+- HD full-body armored warrior, confident stance; heavy pauldrons, chestplate, leather straps, cloth tabard.
+- Natural colors for metals (bronze/iron), leather (rich browns), cloth (deep desaturated hues).
+- Apply trim grays (#202020/#404040/#606060/#808080) to: armor edge inlays, emblem outlines on chest, belt piping, boot edges.
+- Hair: paint base near-black neutral as specified. Skin bright highlights can use near-white neutral.
+- Transparent background, crisp silhouette.
 
-Archer (male and female):
-- HD full-body archer, 3/4 stance; left arm fully extended holding complete uncropped recurve bow; right hand drawing string to cheek with arrow nocked. Bow/garb in 96–200 band; Trim (exact four greys) on bow limb edges, bracer seams, quiver/sash piping, boot/top edging, emblem outlines. Hair in 24–72 band. Skin highlights 216–244. Transparent background.
+Archer (male and female variants):
+- HD full-body archer, 3/4 stance. Left arm extended holding complete, uncropped recurve bow; right hand drawing string to cheek with an arrow nocked.
+- Bow wood is natural wood color; string natural fiber. Clothing in natural greens/browns but NOT neutral grayscale.
+- Use trim grays on: bow limb edge accents (thin lines), bracer seams, quiver piping, sash piping, boot/top edging, emblem outlines.
+- Keep trims flat and crisp; expand trim coverage vs previous versions for clear mapping.
+- Hair: near-black neutral. Skin highlight neutrals OK on brightest planes. Transparent background.
 
 Wizard:
-- HD full-body wizard with staff; robes/metal/wood in 96–200 band; Trim (exact four greys) on robe hem piping, sleeve edge bands, belt piping, chest emblem outline, staff grip rings. Hair 24–72; Skin highlights 216–244. Transparent background.
+- HD full-body wizard, staff visible, cloth and metallic accents. Rich fabrics in color.
+- Trim grays on robe hem piping, sleeve edge bands, belt piping, emblem outlines on chest, staff grip rings.
 
 Valkyrie:
-- HD full-body valkyrie with shield and spear; armor/leather/metal in 96–200 band; Trim (exact four greys) on shield rim inlay, armor edge piping, boot edging, emblem outlines. Hair 24–72; Skin highlights 216–244. Transparent background.
+- HD full-body valkyrie with shield and spear. Metals and leather in natural colors.
+- Trim grays on shield rim inlay, armor edge piping, boot edging, emblem outlines.
 
 Technical encoding checklist:
-- Hair: luma strictly 24–72; Skin highlights: 216–244; Armour/Weapons base: 96–200; Trim: exactly {32,64,96,128}. No pixels may use 0–16 or 245–255 except anti-aliased transparent fringe; avoid trim greys outside trim. No halos; clean alpha.
+- Trim: only the 4 exact mid-gray hex values above; flat fill.
+- Hair: near-black neutral cluster (#0A–#23), low saturation.
+- Skin: only use near-white neutral for top highlights; avoid neutral midtones so main skin color remains painterly.
+- No halos on transparency; clean anti-aliased contour.
+

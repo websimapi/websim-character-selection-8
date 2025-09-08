@@ -82,16 +82,12 @@ function updateCharacterSlot(slot, character, direction) {
         applyColorShaderToImage(newImage, color).then(() => {
             const slotIdx = parseInt(slot.dataset.player,10)-1;
             const hairHex = playerSlots[slotIdx]?.hairColor || hueToHex(slotColors[color]||240,0.8,0.25);
-            const skinHex = playerSlots[slotIdx]?.skinColor || '#f2d0b5';
             applyHairTintToImage(newImage, hairHex);
-            applySkinTintToImage(newImage, skinHex);
         });
     } else {
         const slotIdx = parseInt(slot.dataset.player,10)-1;
         const hairHex = playerSlots[slotIdx]?.hairColor || hueToHex(slotColors[color]||240,0.8,0.25);
-        const skinHex = playerSlots[slotIdx]?.skinColor || '#f2d0b5';
         applyHairTintToImage(newImage, hairHex);
-        applySkinTintToImage(newImage, skinHex);
     }
 
     // Animate old image out (guard if none)
