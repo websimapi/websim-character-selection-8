@@ -1,9 +1,9 @@
 // Palette-based recolor: 6 grayscale trim bands + 6 near-black (hair) + 6 near-white (skin)
 (function(){
   const SLOT_HUES = { blue: 240, green: 120, yellow: 60, red: 0 };
-  const TRIM_LEVELS = [48, 72, 96, 120, 144, 168]; // exact 6 mid-gray trim values
-  const HAIR_MAX = 40;   // 6 closest to black roughly within 0–40
-  const SKIN_MIN = 215;  // 6 closest to white roughly within 215–255
+  const TRIM_VALUES = [32, 64, 96, 128]; // EXACT trim grays: #202020, #404040, #606060, #808080
+  const HAIR_MAX = 36;   // near-black hair band, handled in hair pass
+  const SKIN_MIN = 240;  // only very bright neutrals count as skin for recolor
   const DEFAULT_PALETTES = {
     Warrior: { skinH: 28, skinS: 0.45, skinL: 0.72, unique1: '#9aa3ad', unique2: '#6b3f1f' },
     Archer:  { skinH: 30, skinS: 0.55, skinL: 0.60, unique1: '#8b5a2b', unique2: '#2e8b57' },
@@ -18,15 +18,16 @@
     const m=l-c/2; return {r:Math.round((r1+m)*255), g:Math.round((g1+m)*255), b:Math.round((b1+m)*255)}; }
   function clamp01(v){ return Math.max(0, Math.min(1, v)); }
 
-  // Map to nearest of the 6 trim levels
-  function trimBandForLuma(y){
-    let idx=0, min=1e9;
-    for(let i=0;i<TRIM_LEVELS.length;i++){ const d=Math.abs(y-TRIM_LEVELS[i]); if(d<min){min=d; idx=i;} }
-    return idx; // 0..5
+  // Exact trim gray detection, returns band 0..3 or -1 if not a trim pixel
+  function trimBandForExactGray(r,g,b){
+    if (r!==g || g!==b) return -1;
+    const v = r|0; // 0..255
+    const idx = TRIM_VALUES.indexOf(v);
+    return idx; // -1 if not matched
   }
 
-  function slotShadeColor(hue, band){ // band: 0..5
-    const sArr=[0.70,0.72,0.74,0.76,0.78,0.80], lArr=[0.26,0.34,0.44,0.56,0.68,0.78];
+  function slotShadeColor(hue, band){ // band: 0..3
+    const sArr=[0.70,0.74,0.78,0.80], lArr=[0.30,0.45,0.62,0.78];
     return hslToRgb(hue, sArr[band], lArr[band]);
   }
 
@@ -79,13 +80,15 @@
             const a=p[i+3]; if(a<5) continue;
             const r=p[i], g=p[i+1], b=p[i+2]; const y=getLuma(r,g,b);
             const hsl=rgbToHsl(r,g,b);
-            // classify by luma first; require low saturation to be considered grayscale areas
-            if (hsl.s <= 0.18) {
-              if (y <= HAIR_MAX) { /* hair: do nothing here; hair tint pass will recolor */ continue; }
+            // Only neutral pixels are candidates
+            if (hsl.s <= 0.10) {
+              // Hair: leave untouched here (hair pass handles it)
+              if (y <= HAIR_MAX) { continue; }
+              // Skin: only very bright neutral pixels
               if (y >= SKIN_MIN) { const col=skinColor(paletteFor(character), y); p[i]=col.r; p[i+1]=col.g; p[i+2]=col.b; continue; }
-              // trim mid-grays
-              const band = trimBandForLuma(y); const tgt=slotShadeColor(hue, band);
-              p[i]=tgt.r; p[i+1]=tgt.g; p[i+2]=tgt.b; continue;
+              // Trim: only exact whitelist values
+              const band = trimBandForExactGray(r,g,b);
+              if (band >= 0) { const tgt=slotShadeColor(hue, band); p[i]=tgt.r; p[i+1]=tgt.g; p[i+2]=tgt.b; continue; }
             }
           }
           x.putImageData(d,0,0);

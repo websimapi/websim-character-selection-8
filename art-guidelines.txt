@@ -1,0 +1,50 @@
+Gauntlet Legends Character Art Spec (Recolor-Safe)
+
+Global rules:
+- Transparent background with clean alpha. No fringes/halos, no drop shadow. Full body in frame, boots and full weapon visible.
+- Natural, original colors everywhere except where specified for TRIM and RECOLOR BANDS.
+- Metals, leather, cloth, wood, gemstones: paint in full color and shading. Do NOT use near-neutral grayscale for these materials.
+- Trim bands for player recolor are STRICT, FLAT mid-grays with crisp edges. Use ONLY these exact hex values:
+  • #202020 (32)
+  • #404040 (64)
+  • #606060 (96)
+  • #808080 (128)
+  These are used on armour edging, sash piping, emblem outlines, bow limb edge accents, bracer seams, boot edging, belt piping.
+  No gradients/dithering in trim. Anti-aliasing is OK at edges but keep interior pixels flat.
+- Reserved grayscale NOT for recolor (allowed sparingly): #1C1C1C (28), #AAAAAA (170). Use for fixed accents only.
+- Hair base should be near-black neutral for tinting: cluster values between #0A0A0A and #232323, low saturation.
+  Do NOT use colored highlights in hair; keep shading neutral so engine can tint cleanly.
+- Skin base should be near-white neutral for tinting of highlights: cluster values from #F0F0F0 to #FFFFFF for the brightest planes.
+  Midtones and shadows of skin may be painted normally in color; only the brightest neutral pixels will be re-shaded by engine.
+- Avoid using exact trim grays for anything other than trim accents.
+- Avoid pure #000000/#FFFFFF on outlines; use slightly off-black/off-white to avoid unintended mapping.
+
+Per character prompts:
+Warrior (tank):
+- HD full-body armored warrior, confident stance; heavy pauldrons, chestplate, leather straps, cloth tabard.
+- Natural colors for metals (bronze/iron), leather (rich browns), cloth (deep desaturated hues).
+- Apply trim grays (#202020/#404040/#606060/#808080) to: armor edge inlays, emblem outlines on chest, belt piping, boot edges.
+- Hair: paint base near-black neutral as specified. Skin bright highlights can use near-white neutral.
+- Transparent background, crisp silhouette.
+
+Archer (male and female variants):
+- HD full-body archer, 3/4 stance. Left arm extended holding complete, uncropped recurve bow; right hand drawing string to cheek with an arrow nocked.
+- Bow wood is natural wood color; string natural fiber. Clothing in natural greens/browns but NOT neutral grayscale.
+- Use trim grays on: bow limb edge accents (thin lines), bracer seams, quiver piping, sash piping, boot/top edging, emblem outlines.
+- Keep trims flat and crisp; expand trim coverage vs previous versions for clear mapping.
+- Hair: near-black neutral. Skin highlight neutrals OK on brightest planes. Transparent background.
+
+Wizard:
+- HD full-body wizard, staff visible, cloth and metallic accents. Rich fabrics in color.
+- Trim grays on robe hem piping, sleeve edge bands, belt piping, emblem outlines on chest, staff grip rings.
+
+Valkyrie:
+- HD full-body valkyrie with shield and spear. Metals and leather in natural colors.
+- Trim grays on shield rim inlay, armor edge piping, boot edging, emblem outlines.
+
+Technical encoding checklist:
+- Trim: only the 4 exact mid-gray hex values above; flat fill.
+- Hair: near-black neutral cluster (#0A–#23), low saturation.
+- Skin: only use near-white neutral for top highlights; avoid neutral midtones so main skin color remains painterly.
+- No halos on transparency; clean anti-aliased contour.
+
