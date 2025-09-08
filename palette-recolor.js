@@ -76,19 +76,20 @@
           const d=x.getImageData(0,0,c.width,c.height), p=d.data;
           const hue=SLOT_HUES[slotColorName] ?? 240;
           const lerp=(a,b,t)=>Math.round(a+(b-a)*t);
+          // Edge decontamination to prevent halos/splotching on transparency
+          for(let i=0;i<p.length;i+=4){
+            const a=p[i+3]; if(a>0 && a<40){ const y=getLuma(p[i],p[i+1],p[i+2]); p[i]=y; p[i+1]=y; p[i+2]=y; }
+          }
           for(let i=0;i<p.length;i+=4){
             const a=p[i+3]; if(a<5) continue;
             const r=p[i], g=p[i+1], b=p[i+2]; const y=getLuma(r,g,b);
             const hsl=rgbToHsl(r,g,b);
-            // Only neutral pixels considered
+            // Only neutral pixels considered; skip colored materials entirely
             if (hsl.s <= 0.10) {
-              // Hair: handled in hair pass (new 80–120 range)
-              if (inRange(y, RANGES.HAIR)) { continue; }
-              // Skin
+              if (inRange(y, RANGES.HAIR)) { continue; } // hair handled separately
               if (inRange(y, RANGES.SKIN)) { const col=skinColor(paletteFor(character), y); p[i]=col.r; p[i+1]=col.g; p[i+2]=col.b; continue; }
-              // Trim -> map to slot color, preserve shading within band
               if (inRange(y, RANGES.TRIM)) { const t=(y-RANGES.TRIM.min)/(RANGES.TRIM.max-RANGES.TRIM.min); const tgt=slotShadeColor(hue, t); p[i]=tgt.r; p[i+1]=tgt.g; p[i+2]=tgt.b; continue; }
-              // Armor base: keep grayscale (30–70) so future shaders can target it; do nothing
+              // ARMOR (30–70): leave as-is grayscale to preserve texture for future effects
             }
           }
           x.putImageData(d,0,0);
